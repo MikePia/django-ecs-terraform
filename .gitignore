@@ -2,8 +2,11 @@ __pycache__
 __pycache
 .DS_Store
 *.sqlite3
-secret.md
+secret*
 .vscode
 *.exe
 app/mediafiles
 *.pyc
+.terraform*
+*.tfstate
+*.tfstate*

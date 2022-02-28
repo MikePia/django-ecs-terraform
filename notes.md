@@ -1,4 +1,5 @@
 # testdriven.io
+* Deploying Django to AWS ECS with Terraform
 ### Michael Herman, J-O Eriksson
 * [Terraform, django, docker](https://testdriven.io/blog/deploying-django-to-ecs-with-terraform/?ref=morioh.com&utm_source=morioh.com)
 * [Dockerizing Django, Postgres Gunicorn and Nginx](https://testdriven.io/blog/dockerizing-django-with-postgres-gunicorn-and-nginx/)
@@ -6,8 +7,6 @@
 
 ### My aws account
 [secret](./secret.md)
-
-
 ### Objectives
 1. Explain Terraform
 1. Use ECR Docker image registry to store images
@@ -16,29 +15,25 @@
 1. Boto3 to update an ECS Service
 1. RDS
 209. Https listener for load balancer
-
-
-### Going to set up the following in Terraform
-* Network
+## Explain Terraform -- Overview and setup
+This tut will cover
+1. Networking:
     * VPC
-    * Public and private subnet
+    * Public and private subnets
     * Routing tables
     * Internet Gateway
     * Key Pairs
-* Security Groups
-* Load Balancers, Listeners, and Target Groups
-* IAM Roles and Policies
-* ECS
-    * Task definition
+1. Security Groups
+1. Load Balancers, Listeners, and Target Groups
+1. IAM Roles and Policies
+1. ECS:
+    * Task Definition (with multiple containers)
     * Cluster
     * Service
-* Launch Config and Auto Scaling Group
-* RDS
-* Health Checks and Logs
+1. Launch Config and Auto Scaling Group
+1. Health Checks and Logs
 
-### Elastic Contaier Service is a fully managed thing to 
-Recommends Doing it on the console prior to Terraform
-## Setup
+### Setup
 ```
 $ mkdir django-ecs-terraform && cd django-ecs-terraform
 $ mkdir app && cd app
@@ -50,17 +45,21 @@ $ source env/bin/activate
 (env)$ python manage.py migrate
 (env)$ python manage.py runserver
 ```
+* Edit settings.py
+    * DEBUG=True
+    * ALLOWED_HOSTS = [*]
 
-NOTE:
-tut asked for Django 3.2.9. Latest stabel is 4.0.2. Gonna leave it there till when/if there is a conflict
-
-### File struct under app
-* hello_django
-    * wsgi.py
-    * ...
-* Dockerfile
-* manage.py
-* requirements.txt
+#### File struct
+* .gitignore
+* app
+    * Dockerfile
+    * manage.py
+    * requirements.txt
+    * hello_django
+        * wsgi.py
+        * ...
+        
+## Use ECR Docker image registry to store images
 ### Docker file
 * use python:3.9.0-slim-buster in [Dockerfile](app/Dockerfile)
 
@@ -71,12 +70,9 @@ docker run -p 8007:8000 --name django-test django-ecs gunicorn hello_django.wsgi
 ```
 http://localhost:8007
 
-$ docker stop django-test
-$ docker rm django-test
+docker stop django-test
+docker rm django-test
 
-end _01_cli
-
-### Next going to bush a docker image to the ECR registry 
 
 * Using the AWS console for this. Login then 
     * http://console.aws.amazon.com/ecr
@@ -103,7 +99,7 @@ docker push {AWS_ACCOUNT_ID}.dkr.ecr.{region}.amazonaws.com/django-app:latest
 docker push 760662774875.dkr.ecr.us-east-2.amazonaws.com/django-app:latest
 ```
 
-## Terraform Setup
+##  Terraform config
 * terraform
 [01_provider.tf](terraform/01_provider.tf)
 * Create env variables: (vars in [secret](./secret.md))
@@ -113,7 +109,7 @@ export AWS_SECRET_ACCESS_KEY="YOUR_AWS_SECRET_ACCESS_KEY"
 ```
 * [variables.tf](./terraform/variables.tf)
 
-## Terraform Resources
+### Terraform Resources
 1. Networking:
     * VPC
     * Public and private subnets
@@ -130,7 +126,8 @@ export AWS_SECRET_ACCESS_KEY="YOUR_AWS_SECRET_ACCESS_KEY"
 1. Launch Config and Auto Scaling Group
 1. Health Checks and Logs
 
-``` ```
+### Terraform files
+
 1. [02_network.tf](./terraform/02_network.tf)
     * also added to [variables.tf](./terraform/variables.tf)
 1. [03_securitygroupls.tf](./terraform/03_securitygroups.tf)
@@ -156,15 +153,12 @@ export AWS_SECRET_ACCESS_KEY="YOUR_AWS_SECRET_ACCESS_KEY"
 1. [09_auto_scaling.tf](./terraform/09_auto_scaling.tf)
     * also added to [variables.tf](./terraform/variables.tf)
 
-alb_hostname = 
-http://production-alb-1880460786.us-east-2.elb.amazonaws.com
- And I get a 503      arrrgggh
- I think I am supposed to get a health check error
 
-* add [Health check middle ware](./app/hello_django/middleware.
-py)
-* and in settings MIDDLEWARE
-```'hello_django.middleware.HealthCheckMiddleware',```
+## Deploiy Django to a cluster
+
+* add Middleware
+    * [Health check middle ware](./app/hello_django/middleware.py)
+    * and in settings MIDDLEWARE ```'hello_django.middleware.HealthCheckMiddleware',```
 ```
 docker build -t django-ecs .
 docker run \
@@ -180,6 +174,19 @@ stop it
 docker build -t 760662774875.dkr.ecr.us-east-2.amazonaws.com/django-app:latest .
 docker push 760662774875.dkr.ecr.us-east-2.amazonaws.com/django-app:latest
 ```
+
+* Script to update task definition
+    * [update-ecs.py](./deploy/update-ecs.py)
+    * pip install boto3 click
+
+```
+export AWS_ACCESS_KEY_ID="YOUR_AWS_ACCESS_KEY_ID"
+export AWS_SECRET_ACCESS_KEY="YOUR_AWS_SECRET_ACCESS_KEY"
+export AWS_DEFAULT_REGION="us-east-2"
+python update-ecs.py --cluster=production-cluster --service=production-service
+```
+
+"production-alb-548003530.us-east-2.elb.amazonaws.com
 
 
 
