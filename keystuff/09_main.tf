@@ -8,6 +8,7 @@ resource "aws_instance" "ec2_key_example" {
 }
 
 resource "aws_security_group" "main" {
+  name = "main_security_group"
   egress =  [
       {
         cidr_blocks      = ["0.0.0.0/0", ]
@@ -35,9 +36,4 @@ resource "aws_security_group" "main" {
         to_port          = 22
       }
     ]
-}
-
-resource "aws_key_pair" "deployer" {
-    key_name    = "key-for-demo"
-    public_key = file(var.ssh_pubkey_file)
 }

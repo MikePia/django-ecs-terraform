@@ -48,7 +48,7 @@ variable "ecs_cluster_name" {
 variable "amis" {
   description = "Which AMI to spawn."
   default = {
-    us-west-1 = "ami-0bd3976c0dbacc605"
+    us-west-2 = "ami-005e54dee72cc1d00"
   }
 }
 variable "instance_type" {
@@ -56,11 +56,11 @@ variable "instance_type" {
 }
 variable "docker_image_url_django" {
   description = "Docker image to run in the ECS cluster"
-  default     = "760662774875.dkr.ecr.us-west-1.amazonaws.com/django-app:latest"
+  default     = "760662774875.dkr.ecr.us-west-2.amazonaws.com/django-app:latest"
 }
 variable "docker_image_url_nginx" {
   description = "Docker image to run in the ECS cluster"
-  default     = "760662774875.dkr.ecr.us-west-1.amazonaws.com/nginx:latest"
+  default     = "760662774875.dkr.ecr.us-west-2.amazonaws.com/nginx:latest"
 }
 variable "app_count" {
   description = "Number of Docker containers to run"
@@ -126,5 +126,5 @@ variable "autoscale_desired" {
 
 variable "certificate_arn" {
   description = "AWS Certificate Manager ARN for validated domain"
-  default     = "arn:aws:acm:us-west-1:760662774875:certificate/8b190f3a-f4e1-4742-86df-9e47f255f300"
+  default     = "arn:aws:acm:us-west-2:760662774875:certificate/1be171aa-9d7c-4e18-8746-2adc7d8cad48"
 }
